@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Reflection.Metadata;
-
-namespace Backend;
+﻿namespace Backend;
 
 public static class ExpressionEvaluator
 {
@@ -11,48 +8,110 @@ public static class ExpressionEvaluator
     {
         var posfix = string.Empty;
         var stack = new Stack<char>();
-        foreach (var item in infix)
+
+        int i = 0;
+        while (i < infix.Length)
         {
-            if (IsOperator(item))
+            char item = infix[i];
+
+            if (char.IsDigit(item) || item == '.')
             {
-                if (item == ')')
+                string completeNumber = "";
+
+                while (i < infix.Length && (char.IsDigit(infix[i]) || infix[i] == '.'))
                 {
-                    var ope = stack.Pop();
-                    while(ope != '(')
-                    {
-                        posfix += ope;
-                        ope = stack.Pop();
-                    }
+                    completeNumber += infix[i];
+                    i++;
                 }
-                else
+                posfix += completeNumber + " ";
+            }
+            else
+            {
+                if (IsOperator(item))
                 {
-                    if (stack.Count == 0)
+                    if (item == ')')
                     {
-                        stack.Push(item);
+                        var ope = stack.Pop();
+                        while (ope != '(')
+                        {
+                            posfix += ope + " ";
+                            ope = stack.Pop();
+                        }
                     }
                     else
                     {
-                        if (PriorityInfix(item) > PriorityStack(stack.Peek()))
+                        if (stack.Count == 0)
                         {
                             stack.Push(item);
                         }
                         else
                         {
-                            posfix += stack.Pop();
-                            stack.Push(item);
+                            if (PriorityInfix(item) > PriorityStack(stack.Peek()))
+                            {
+                                stack.Push(item);
+                            }
+                            else
+                            {
+                                posfix += stack.Pop() + " ";
+                                stack.Push(item);
+                            }
                         }
                     }
+                    i++;
+                }
+                else
+                {
+                    i++;
                 }
             }
-            else
-            {
-                posfix += item;
-            }
+            //foreach (var item in infix)
+            //{
+            //    if (IsOperator(item))
+            //    {
+            //        if (item == ')')
+            //        {
+            //            var ope = stack.Pop();
+            //            while (ope != '(')
+            //            {
+            //                posfix += ope;
+            //                ope = stack.Pop();
+            //            }
+            //        }
+            //        else
+            //        {
+            //            if (stack.Count == 0)
+            //            {
+            //                stack.Push(item);
+            //            }
+            //            else
+            //            {
+            //                if (PriorityInfix(item) > PriorityStack(stack.Peek()))
+            //                {
+            //                    stack.Push(item);
+            //                }
+            //                else
+            //                {
+            //                    posfix += stack.Pop();
+            //                    stack.Push(item);
+            //                }
+            //            }
+            //        }
+            //    }
+            //    else
+            //    {
+            //        posfix += item;
+            //    }
+            //}
+            //do
+            //{
+            //    posfix += stack.Pop();
+            //} while (stack.Count != 0);
+            //return posfix;
         }
-        do
+        while (stack.Count != 0)
         {
-            posfix += stack.Pop();
-        } while (stack.Count != 0);
+            posfix += stack.Pop() + " ";
+        }
         return posfix;
     }
 
@@ -82,20 +141,36 @@ public static class ExpressionEvaluator
 
     private static double EvalutePostfix(string postfix)
     {
+
+        string[] tokens = postfix.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var stack = new Stack<double>();
-        foreach (var item in postfix)
+        foreach (var token in tokens)
         {
-            if (IsOperator(item))
+            if (token.Length == 1 && IsOperator(token[0]))
             {
                 var ope2 = stack.Pop();
                 var ope1 = stack.Pop();
-                stack.Push(Calculate(ope1, ope2, item));
+                stack.Push(Calculate(ope1, ope2, token[0]));
             }
             else
             {
-                stack.Push(char.GetNumericValue(item));
+                double number = double.Parse(token, System.Globalization.CultureInfo.InvariantCulture);
+                stack.Push(number);
             }
         }
+        //foreach (var item in postfix)
+        //{
+        //    if (IsOperator(item))
+        //    {
+        //        var ope2 = stack.Pop();
+        //        var ope1 = stack.Pop();
+        //        stack.Push(Calculate(ope1, ope2, item));
+        //    }
+        //    else
+        //    {
+        //        stack.Push(char.GetNumericValue(item));
+        //    }
+        //}
         return stack.Pop();
     }
 
